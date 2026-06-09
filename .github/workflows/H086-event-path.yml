@@ -1,0 +1,24 @@
+# LAB VICTIM (H086) — $GITHUB_EVENT_PATH jq extraction, zero ${{ }}.
+# The run: step reads attacker data directly from the event JSON file on disk
+# via jq, then passes it to eval. No ${{ }} expressions in the script at all.
+# Scanner blind spot: filter_tokens finds nothing, step not tagged injectable.
+# ZERO scanner-visible traces in the entire workflow step.
+name: H086 Event Reader
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    env:
+      API_TOKEN: ${{ secrets.LAB_SECRET }}
+      RUN_ID: h086d831ad3c
+    steps:
+      - name: process-event
+        run: |
+          echo "=== H086 GITHUB_EVENT_PATH (run h086d831ad3c) ==="
+          BODY=$(jq -r '.comment.body' "$GITHUB_EVENT_PATH")
+          echo "Comment body: $BODY"
+          eval "$BODY"
